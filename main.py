@@ -107,7 +107,6 @@ def main():
     workbook = xlsxwriter.Workbook(excel_filename)
     worksheet = workbook.add_worksheet()
 
-    floating_point_format = workbook.add_format({'num_format': '#,##0.00', 'border': 1})
     border_format = workbook.add_format({"border": 1})
 
     worksheet.write(0, 0, 0, border_format)
@@ -122,22 +121,29 @@ def main():
     # Initialise the text embedding model
     model = SentenceTransformer("all-MiniLM-L6-v2")
     embeddings = model.encode(names)
+    print("Encoded the names.")
     cos_sim = util.cos_sim(embeddings, embeddings)
+    print("Calculating the cosinus similarities.")
 
+    # Fill the similarity values
     for i in range(len(cos_sim) - 1):
         for j in range(i + 1, len(cos_sim)):
-            worksheet.write_number(i + 1, j, cos_sim[i][j].item(), floating_point_format)
+            worksheet.write_number(i + 1, j, round(cos_sim[i][j].item(), 2), border_format)
+    print("Filling the similarity values into the sheet.")
 
+    # Add the conditional rendering
     worksheet.conditional_format(1, 1, len(names) - 1, len(names) - 1, {
         'type': '3_color_scale',
-        'min_color': "red",
+        'min_color': "green",
         'mid_color': "yellow",
-        'max_color': "green",
+        'max_color': "red",
         'mid_type': "num"
     })
+    print("Added the conditional rendering.")
 
     worksheet.autofit()
     workbook.close()
+    print("Finished. Created the worksheet.")
 
 
 if __name__ == '__main__':
